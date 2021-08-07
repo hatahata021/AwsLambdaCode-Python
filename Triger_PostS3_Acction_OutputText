@@ -1,0 +1,33 @@
+import boto3
+
+s3 = boto3.client('s3')
+
+def read_file(bucket_name, file_key):
+    response = s3.get_object(Bucket=bucket_name, Key=file_key)
+    print(response)
+    print(response[u'Body'])
+    return response[u'Body'].read().decode('utf-8')
+
+def upload_file(bucket_name, file_key, bytes):
+    out_s3 = boto3.resource('s3')
+    s3Obj = out_s3.Object(bucket_name, file_key)
+    res = s3Obj.put(Body = bytes)
+    print(res)
+    return res
+
+def lambda_handler(event, context):
+    print("Lambdaが呼ばれたよ！！！！！！")
+    input_bucket = event['Records'][0]['s3']['bucket']['name']
+    input_key = event['Records'][0]['s3']['object']['key']
+    print("bucket =", input_bucket)
+    print("key =", input_key)
+
+# S3からファイルを読み込み
+#lambda_handler(event, context)
+    text = read_file(input_bucket, input_key)
+    print(text)
+# outputのキーを設定
+    output_key = "outputs/" + input_key
+    print(output_key)
+# ファイルをS3に出力
+    upload_file(input_bucket, output_key, bytes(text, 'UTF-8'))
